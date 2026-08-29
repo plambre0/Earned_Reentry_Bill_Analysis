@@ -130,7 +130,12 @@ ssa_table <- matrix(c(.006064,100000,74.74,.005119,100000,80.18,
                       .957970,0,0.54,.957970,0,0.54,
                       1.000000,0,0.50,1.000000,0,0.50), ncol = 6, byrow = TRUE)
 ssa_table <- data.frame(ssa_table)
-colnames(ssa_table) <- c("Male_Death_probability", "Male_Number_of_lives", "Male_Life_expectancy", "Female_Death_probability", "Female_Number_of_lives", "Female_Life_expectancy")
+colnames(ssa_table) <- c("Male_Death_probability", 
+                         "Male_Number_of_lives", 
+                         "Male_Life_expectancy", 
+                         "Female_Death_probability", 
+                         "Female_Number_of_lives", 
+                         "Female_Life_expectancy")
 ssa_table$Age <- c(0:119)
 
 ################################################################################
@@ -163,45 +168,38 @@ joint <- expand.grid(race = races, age = ages, vfo = vfos,
                      stringsAsFactors = FALSE)
 
 N_total <- sum(race_margins$heard)
-
 joint$n <- N_total/nrow(joint)
 
 ipf <- function(seed, race_m, age_m, vfo_m,
                 max_iter = 200, tol = 1e-6){
-  
   df <- seed
-  
   for (i in seq_len(max_iter)){
     df_old <- df$n
-    
     race_current <- df %>% group_by(race) %>% summarise(n_sum = sum(n))
     df <- df %>%
       left_join(race_current, by = "race") %>%
       left_join(race_m %>% select(race, heard), by = "race") %>%
       mutate(n = n * heard/n_sum) %>%
       select(-n_sum, -heard)
-    
     age_current <- df %>% group_by(age) %>% summarise(n_sum = sum(n))
     df <- df %>%
       left_join(age_current, by = "age") %>%
       left_join(age_m %>% select(age, heard), by = "age") %>%
       mutate(n = n * heard/n_sum) %>%
       select(-n_sum, -heard)
-    
     vfo_current <- df %>% group_by(vfo) %>% summarise(n_sum = sum(n))
     df <- df %>%
       left_join(vfo_current, by = "vfo") %>%
       left_join(vfo_m %>% select(vfo, heard), by = "vfo") %>%
       mutate(n = n * heard/n_sum) %>%
       select(-n_sum, -heard)
-    
     max_delta <- max(abs(df$n - df_old))
     if (max_delta < tol){
-      cat(sprintf("IPF converged in %d iterations (max delta = %.2e)\n", i, max_delta))
+      cat(sprintf("IPF converged in %d iterations (max delta = %.2e)\n", 
+                  i, max_delta))
       return(df)
     }
   }
-  
   warning("IPF did not converge — inspect margins for inconsistencies.")
   return(df)
 }
@@ -229,36 +227,36 @@ joint_fitted <- joint_fitted %>%
 check_race <- joint_fitted %>%
   group_by(race) %>%
   summarise(
-    n_fitted   = sum(n),
-    n_actual   = race_margins$heard[match(first(race), race_margins$race)],
-    grant_fit  = sum(n_granted_est),
-    grant_act  = race_margins$granted[match(first(race), race_margins$race)],
-    rate_fit   = grant_fit/n_fitted,
-    rate_act   = grant_act/n_actual
+    n_fitted = sum(n),
+    n_actual = race_margins$heard[match(first(race), race_margins$race)],
+    grant_fit = sum(n_granted_est),
+    grant_act = race_margins$granted[match(first(race), race_margins$race)],
+    rate_fit = grant_fit/n_fitted,
+    rate_act = grant_act/n_actual
   )
 print(check_race)
 
 check_age <- joint_fitted %>%
   group_by(age) %>%
   summarise(
-    n_fitted   = sum(n),
-    n_actual   = age_margins$heard[match(first(age), age_margins$age)],
-    grant_fit  = sum(n_granted_est),
-    grant_act  = age_margins$granted[match(first(age), age_margins$age)],
-    rate_fit   = grant_fit/n_fitted,
-    rate_act   = grant_act/n_actual
+    n_fitted = sum(n),
+    n_actual = age_margins$heard[match(first(age), age_margins$age)],
+    grant_fit = sum(n_granted_est),
+    grant_act = age_margins$granted[match(first(age), age_margins$age)],
+    rate_fit = grant_fit/n_fitted,
+    rate_act = grant_act/n_actual
   )
 print(check_age)
 
 check_vfo <- joint_fitted %>%
   group_by(vfo) %>%
   summarise(
-    n_fitted   = sum(n),
-    n_actual   = vfo_margins$heard[match(first(vfo), vfo_margins$vfo)],
-    grant_fit  = sum(n_granted_est),
-    grant_act  = vfo_margins$granted[match(first(vfo), vfo_margins$vfo)],
-    rate_fit   = grant_fit/n_fitted,
-    rate_act   = grant_act/n_actual
+    n_fitted = sum(n),
+    n_actual = vfo_margins$heard[match(first(vfo), vfo_margins$vfo)],
+    grant_fit = sum(n_granted_est),
+    grant_act = vfo_margins$granted[match(first(vfo), vfo_margins$vfo)],
+    rate_fit = grant_fit/n_fitted,
+    rate_act = grant_act/n_actual
   )
 print(check_vfo)
 
@@ -279,20 +277,25 @@ colnames(pop_2025) <- pop_2025[4,]
 pop_2025 <- pop_2025[5:nrow(pop_2025),]
 rownames(pop_2025) <- c(1:nrow(pop_2025))
 
-pop_2025$`Date of Birth`          <- as.Date(as.numeric(pop_2025$`Date of Birth`),          origin = "1899-12-30")
-pop_2025$`Sentence Date`          <- as.Date(as.numeric(pop_2025$`Sentence Date`),          origin = "1899-12-30")
-pop_2025$`Current Admission Date` <- as.Date(as.numeric(pop_2025$`Current Admission Date`), origin = "1899-12-30")
+pop_2025$`Date of Birth` <- as.Date(as.numeric(pop_2025$`Date of Birth`), 
+                                    origin = "1899-12-30")
+pop_2025$`Sentence Date` <- as.Date(as.numeric(pop_2025$`Sentence Date`), 
+                                    origin = "1899-12-30")
+pop_2025$`Current Admission Date` <- 
+  as.Date(as.numeric(pop_2025$`Current Admission Date`), origin = "1899-12-30")
 
-pop_2025$Age    <- -1 * as.numeric(difftime(pop_2025$`Date of Birth`,          as.Date('2026-01-01'))) / 365
-pop_2025$Served <- -1 * as.numeric(difftime(pop_2025$`Current Admission Date`, as.Date('2026-01-01'))) / 365
+pop_2025$Age    <- -1 * as.numeric(difftime(pop_2025$`Date of Birth`, 
+                                            as.Date('2026-01-01'))) / 365
+pop_2025$Served <- -1 * as.numeric(difftime(pop_2025$`Current Admission Date`, 
+                                            as.Date('2026-01-01'))) / 365
 
 prisoners_yr <- pop_2025
-years        <- list()
+years <- list()
 years_eligable <- list()
-years_out    <- 10
+years_out <- 10
 
 for (yr in 1:years_out) {
-  prisoners_yr$Age    <- prisoners_yr$Age    + 1
+  prisoners_yr$Age <- prisoners_yr$Age + 1
   prisoners_yr$Served <- prisoners_yr$Served + 1
   years[[yr]] <- prisoners_yr
 }
@@ -329,14 +332,13 @@ years_eligable <- lapply(years_eligable, function(x) {
     )
 })
 
-
 colnames(ssa_table) <- c("Male_Death_probability", "Male_Number_of_lives", "Male_Life_expectancy",
                          "Female_Death_probability", "Female_Number_of_lives", "Female_Life_expectancy",
                          "Age")
 
 get_qx <- function(race, sex, age) {
   age_floor <- pmax(0, pmin(floor(age), max(ssa_table$Age)))
-  row       <- ssa_table[ssa_table$Age == age_floor, ]
+  row <- ssa_table[ssa_table$Age == age_floor, ]
   if (sex == "Female") row$Female_Death_probability else row$Male_Death_probability
 }
 
@@ -350,11 +352,11 @@ years_eligable <- lapply(years_eligable, FUN = function(x) {
 results <- lapply(seq_along(years_eligable), FUN = function(yr) {
   years_eligable[[yr]] %>%
     mutate(
-      years_to_hearing     = yr - 1,
+      years_to_hearing = yr - 1,
       p_survive_to_hearing = (1 - p_death_1yr)^years_to_hearing,
-      p_paroled            = p_survive_to_hearing * p_parole,
-      p_dies               = 1 - p_survive_to_hearing,
-      p_nothing            = p_survive_to_hearing * (1 - p_parole)
+      p_paroled = p_survive_to_hearing * p_parole,
+      p_dies = 1 - p_survive_to_hearing,
+      p_nothing = p_survive_to_hearing * (1 - p_parole)
     )
 })
 
@@ -367,17 +369,17 @@ cat("Probability sum check (should be 1):", check, "\n\n")
 ev_summary <- lapply(seq_along(results), FUN = function(yr) {
   results[[yr]] %>%
     summarise(
-      year              = yr,
-      n_total           = n(),
-      EV_paroled        = sum(p_paroled,                   na.rm = TRUE),
-      EV_dies           = sum(p_dies,                      na.rm = TRUE),
-      EV_nothing        = sum(p_nothing,                   na.rm = TRUE),
-      EV_paroled_Black  = sum(p_paroled[Race == "Black"],  na.rm = TRUE),
-      EV_paroled_White  = sum(p_paroled[Race == "White"],  na.rm = TRUE),
+      year = yr,
+      n_total = n(),
+      EV_paroled = sum(p_paroled, na.rm = TRUE),
+      EV_dies = sum(p_dies, na.rm = TRUE),
+      EV_nothing = sum(p_nothing, na.rm = TRUE),
+      EV_paroled_Black = sum(p_paroled[Race == "Black"], na.rm = TRUE),
+      EV_paroled_White = sum(p_paroled[Race == "White"], na.rm = TRUE),
       EV_paroled_Latinx = sum(p_paroled[Race == "Latinx"], na.rm = TRUE),
-      EV_paroled_AIAN   = sum(p_paroled[Race == "Native American"], na.rm = TRUE),
-      EV_paroled_Asian  = sum(p_paroled[Race == "Asian/PI"],        na.rm = TRUE),
-      EV_paroled_VFO    = sum(p_paroled[vfo == "VFO"],    na.rm = TRUE)
+      EV_paroled_AIAN = sum(p_paroled[Race == "Native American"], na.rm = TRUE),
+      EV_paroled_Asian = sum(p_paroled[Race == "Asian/PI"], na.rm = TRUE),
+      EV_paroled_VFO = sum(p_paroled[vfo == "VFO"], na.rm = TRUE)
     )
 }) %>%
   bind_rows() %>% data.frame()
