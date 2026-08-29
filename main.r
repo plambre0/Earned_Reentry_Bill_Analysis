@@ -149,20 +149,20 @@ race_margins <- data.frame(
 ) %>% mutate(rate = granted/heard)
 
 age_margins <- data.frame(
-  age      = c("Under 25", "25-34", "35-44", "45-54", "55+"),
-  heard    = c(554, 2062, 2036, 1177, 1201),
-  granted  = c(145, 774, 888, 520, 478)
+  age = c("Under 25", "25-34", "35-44", "45-54", "55+"),
+  heard = c(554, 2062, 2036, 1177, 1201),
+  granted = c(145, 774, 888, 520, 478)
 ) %>% mutate(rate = granted/heard)
 
 vfo_margins <- data.frame(
-  vfo      = c("Non-VFO", "VFO"),
-  heard    = c(5228, 1781),
-  granted  = c(2328, 470)
+  vfo = c("Non-VFO", "VFO"),
+  heard = c(5228, 1781),
+  granted = c(2328, 470)
 ) %>% mutate(rate = granted/heard)
 
 races <- race_margins$race
-ages  <- age_margins$age
-vfos  <- vfo_margins$vfo
+ages <- age_margins$age
+vfos <- vfo_margins$vfo
 
 joint <- expand.grid(race = races, age = ages, vfo = vfos,
                      stringsAsFactors = FALSE)
@@ -210,8 +210,8 @@ p_grand <- sum(race_margins$granted)/sum(race_margins$heard)
 lo_grand <- log(p_grand/(1 - p_grand))
 
 lo_race <- with(race_margins, log(rate/(1 - rate)) - lo_grand)
-lo_age  <- with(age_margins,  log(rate/(1 - rate)) - lo_grand)
-lo_vfo  <- with(vfo_margins,  log(rate/(1 - rate)) - lo_grand)
+lo_age <- with(age_margins,  log(rate/(1 - rate)) - lo_grand)
+lo_vfo <- with(vfo_margins,  log(rate/(1 - rate)) - lo_grand)
 
 names(lo_race) <- race_margins$race
 names(lo_age)  <- age_margins$age
@@ -284,7 +284,7 @@ pop_2025$`Sentence Date` <- as.Date(as.numeric(pop_2025$`Sentence Date`),
 pop_2025$`Current Admission Date` <- 
   as.Date(as.numeric(pop_2025$`Current Admission Date`), origin = "1899-12-30")
 
-pop_2025$Age    <- -1 * as.numeric(difftime(pop_2025$`Date of Birth`, 
+pop_2025$Age <- -1 * as.numeric(difftime(pop_2025$`Date of Birth`, 
                                             as.Date('2026-01-01'))) / 365
 pop_2025$Served <- -1 * as.numeric(difftime(pop_2025$`Current Admission Date`, 
                                             as.Date('2026-01-01'))) / 365
