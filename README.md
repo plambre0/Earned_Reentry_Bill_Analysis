@@ -1,1 +1,1 @@
-Code supporting my pro-bono benefit-cost analysis consulting project on the Earned Reentry Bill for Parole Illinois. Written May 2026.
+Code for my ex-ante legislative impact analysis for the Earned Reentry Bill.
