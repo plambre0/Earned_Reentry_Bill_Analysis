@@ -132,7 +132,8 @@ files_parole <- c(
   "C:/Users/Paolo/Desktop/PI Report/Dec2022-Parole-Population-Final.xls",
   "C:/Users/Paolo/Desktop/PI Report/December-2023-Parole.xls",
   "C:/Users/Paolo/Desktop/PI Report/Dec-2024-Parole-MSR.xls",
-  "C:/Users/Paolo/Desktop/PI Report/Parole-Population-December-2025.xls"
+  "C:/Users/Paolo/Desktop/PI Report/Parole-Population-December-2025.xls",
+  "C:/Users/Paolo/Desktop/PI Report/December-2026-Prison.xls"
 )
 
 year_list <- 2016:2025
