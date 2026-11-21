@@ -242,7 +242,16 @@ recidivism_ipf <- ipf(
 ################################################################################
 # Labor IPF
 ################################################################################
+# employment_age <- read.csv()
+# employment_race <- read.csv()
+# wage_age <- read.csv()
+# wage_race <- read.csv()
 
 ################################################################################
 # Public Assistance IPF
 ################################################################################
+# medicaid_age <- read.csv()
+# medicaid_race <- read.csv()
+# ccp_age <- read.csv()
+# ccp_race <- read.csv()
+# ccp_income <- read.csv()
