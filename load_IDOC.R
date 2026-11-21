@@ -6,21 +6,22 @@ library(lubridate)
 library(clipr)
 library(tidyr)
 
+setwd("C:/Users/Paolo/Desktop/PI Report/")
+
 ################################################################################
 # IDOC Datasets
 ################################################################################
-
 files_IDOC <- c(
-  "C:/Users/Paolo/Desktop/PI Report/internet-data-set-prison-stock-dec-2016.xls",
-  "C:/Users/Paolo/Desktop/PI Report/internet-data-set-prison-stock-dec-2017.xls",
-  "C:/Users/Paolo/Desktop/PI Report/december-2018-prison-stock.xls",
-  "C:/Users/Paolo/Desktop/PI Report/dec-31-2019-prison-stock-pop.xls",
-  "C:/Users/Paolo/Desktop/PI Report/dec-2020-prison-stock.xls",
-  "C:/Users/Paolo/Desktop/PI Report/december-2021-prison-stock.xls",
-  "C:/Users/Paolo/Desktop/PI Report/Dec-2022-Prison-Population-Data-Set.xls",
-  "C:/Users/Paolo/Desktop/PI Report/December-2023-Prison.xls",
-  "C:/Users/Paolo/Desktop/PI Report/December-2024-Prison.xls",
-  "C:/Users/Paolo/Desktop/PI Report/December-2025-Prison.xls"
+  "internet-data-set-prison-stock-dec-2016.xls",
+  "internet-data-set-prison-stock-dec-2017.xls",
+  "december-2018-prison-stock.xls",
+  "dec-31-2019-prison-stock-pop.xls",
+  "dec-2020-prison-stock.xls",
+  "december-2021-prison-stock.xls",
+  "Dec-2022-Prison-Population-Data-Set.xls",
+  "December-2023-Prison.xls",
+  "December-2024-Prison.xls",
+  "December-2025-Prison.xls"
 )
 
 year_list <- 2016:2025
@@ -47,8 +48,8 @@ clean_date_col <- function(col) {
 
 IDOC <- IDOC %>%
   map(~ mutate(.x,
-               `Date of Birth`          = clean_date_col(`Date of Birth`),
-               `Sentence Date`          = clean_date_col(`Sentence Date`),
+               `Date of Birth` = clean_date_col(`Date of Birth`),
+               `Sentence Date` = clean_date_col(`Sentence Date`),
                `Current Admission Date` = clean_date_col(`Current Admission Date`)
   ))
 
@@ -56,16 +57,21 @@ IDOC_all <- bind_rows(IDOC, .id = "Year") %>%
   mutate(
     Year = as.integer(Year),
     Age_at_admission = floor(time_length(interval(`Date of Birth`, `Current Admission Date`), "years")),
-    Age_dataset_year = floor(time_length(interval(`Date of Birth`, make_date(Year, 12, 31)), "years"))
+    Age_dataset_year = floor(time_length(interval(`Date of Birth`, make_date(Year, 12, 31)), "years")),
+    years_served = floor(time_length(interval(`Current Admission Date`, make_date(Year, 12, 31)), "years")),
+    Age_group = cut(Age_dataset_year, c(0, 49, 59, 69, 79, Inf), 
+                    labels = c("<50", "50-59", "60-69", "70-79", "80+")),
+    Served_group = cut(Age_dataset_year, c(19, 29, 39, Inf), 
+                       labels = c("20-29", "30-39", "40+"))
   )
 
 C_IDOC <- IDOC_all %>%
   filter(`Sentence Date` >= as.Date("1900-01-01"),
          `Sentence Date` <= as.Date("1978-01-31"))
 
-C_IDOC %>% count(Year, `Crime Class`)     %>% pivot_wider(names_from = Year, values_from = n)
-C_IDOC %>% count(Year, Race)              %>% pivot_wider(names_from = Year, values_from = n)
-C_IDOC %>% count(Year, Age_dataset_year)  %>% pivot_wider(names_from = Year, values_from = n)
+C_IDOC %>% count(Year, `Crime Class`) %>% pivot_wider(names_from = Year, values_from = n)
+C_IDOC %>% count(Year, Race) %>% pivot_wider(names_from = Year, values_from = n)
+C_IDOC %>% count(Year, Age_dataset_year) %>% pivot_wider(names_from = Year, values_from = n)
 
 C_IDOC %>%
   mutate(Age_group = cut(Age_dataset_year, c(0, 49, 59, 69, 79, Inf),
@@ -79,11 +85,6 @@ C_IDOC %>%
 
 C_IDOC <- C_IDOC %>%
   mutate(
-    Age_group = cut(Age_dataset_year,
-                    breaks = c(25, 40, 55, 65, Inf),
-                    labels = c("25–39", "40–54", "55–64", "65_or_older"),
-                    right  = FALSE,
-                    ordered_result = TRUE),
     Race_clean  = str_to_upper(str_trim(Race)),
     Class_clean = str_to_upper(str_trim(`Crime Class`))
   )
@@ -95,21 +96,21 @@ C_IDOC %>% count(Age_group)
 yearly_table_IDOC <- C_IDOC %>%
   group_by(Year) %>%
   summarise(
-    `25–39_IDOC`        = sum(Age_group == "25–39",       na.rm = TRUE),
-    `40–54_IDOC`        = sum(Age_group == "40–54",       na.rm = TRUE),
-    `55–64_IDOC`        = sum(Age_group == "55–64",       na.rm = TRUE),
-    `65_or_older_IDOC`  = sum(Age_group == "65_or_older", na.rm = TRUE),
+    `25–39_IDOC` = sum(Age_group == "25–39", na.rm = TRUE),
+    `40–54_IDOC` = sum(Age_group == "40–54", na.rm = TRUE),
+    `55–64_IDOC` = sum(Age_group == "55–64", na.rm = TRUE),
+    `65_or_older_IDOC` = sum(Age_group == "65_or_older", na.rm = TRUE),
     
-    Black_IDOC          = sum(str_detect(Race_clean, "BLACK"),    na.rm = TRUE),
-    Hispanic_IDOC       = sum(str_detect(Race_clean, "HISPANIC"), na.rm = TRUE),
-    White_IDOC          = sum(str_detect(Race_clean, "WHITE"),    na.rm = TRUE),
+    Black_IDOC = sum(str_detect(Race_clean, "BLACK"), na.rm = TRUE),
+    Hispanic_IDOC = sum(str_detect(Race_clean, "HISPANIC"), na.rm = TRUE),
+    White_IDOC = sum(str_detect(Race_clean, "WHITE"), na.rm = TRUE),
     
-    Class_1_IDOC        = sum(Class_clean %in% c("CLASS 1", "1"), na.rm = TRUE),
-    Class_2_IDOC        = sum(Class_clean %in% c("CLASS 2", "2"), na.rm = TRUE),
-    Class_3_IDOC        = sum(Class_clean %in% c("CLASS 3", "3"), na.rm = TRUE),
-    Class_4_IDOC        = sum(Class_clean %in% c("CLASS 4", "4"), na.rm = TRUE),
-    Class_X_IDOC        = sum(Class_clean %in% c("CLASS X", "X"), na.rm = TRUE),
-    Murder_IDOC         = sum(str_detect(Class_clean, "MURDER") | Class_clean %in% c("M", "CLASS M"),
+    Class_1_IDOC = sum(Class_clean %in% c("CLASS 1", "1"), na.rm = TRUE),
+    Class_2_IDOC = sum(Class_clean %in% c("CLASS 2", "2"), na.rm = TRUE),
+    Class_3_IDOC = sum(Class_clean %in% c("CLASS 3", "3"), na.rm = TRUE),
+    Class_4_IDOC = sum(Class_clean %in% c("CLASS 4", "4"), na.rm = TRUE),
+    Class_X_IDOC = sum(Class_clean %in% c("CLASS X", "X"), na.rm = TRUE),
+    Murder_IDOC = sum(str_detect(Class_clean, "MURDER") | Class_clean %in% c("M", "CLASS M"),
                                  na.rm = TRUE),
     .groups = "drop"
   ) %>%
@@ -121,19 +122,17 @@ clipr::write_clip(yearly_table_IDOC)
 ################################################################################
 # Parole Datasets
 ################################################################################
-
 files_parole <- c(
-  "C:/Users/Paolo/Desktop/PI Report/december-2016-parole-stock-pop.xls",
-  "C:/Users/Paolo/Desktop/PI Report/december-2017-stock-pop.xls",
-  "C:/Users/Paolo/Desktop/PI Report/dec-2018-parole-stock-population.xls",
-  "C:/Users/Paolo/Desktop/PI Report/december-2019-parole-stock-pop.xls",
-  "C:/Users/Paolo/Desktop/PI Report/december-2020-parole-stock.xls",
-  "C:/Users/Paolo/Desktop/PI Report/parole-stock-12.31.2021.xls",
-  "C:/Users/Paolo/Desktop/PI Report/Dec2022-Parole-Population-Final.xls",
-  "C:/Users/Paolo/Desktop/PI Report/December-2023-Parole.xls",
-  "C:/Users/Paolo/Desktop/PI Report/Dec-2024-Parole-MSR.xls",
-  "C:/Users/Paolo/Desktop/PI Report/Parole-Population-December-2025.xls",
-  "C:/Users/Paolo/Desktop/PI Report/December-2026-Prison.xls"
+  "december-2016-parole-stock-pop.xls",
+  "december-2017-stock-pop.xls",
+  "dec-2018-parole-stock-population.xls",
+  "december-2019-parole-stock-pop.xls",
+  "december-2020-parole-stock.xls",
+  "parole-stock-12.31.2021.xls",
+  "Dec2022-Parole-Population-Final.xls",
+  "December-2023-Parole.xls",
+  "Dec-2024-Parole-MSR.xls",
+  "Parole-Population-December-2025.xls"
 )
 
 year_list <- 2016:2025
@@ -158,8 +157,8 @@ clean_date_col <- function(col) {
 
 parole <- parole %>%
   map(~ mutate(.x,
-               `Date of Birth`          = clean_date_col(`Date of Birth`),
-               `Sentence Date`          = clean_date_col(`Sentence Date`),
+               `Date of Birth` = clean_date_col(`Date of Birth`),
+               `Sentence Date` = clean_date_col(`Sentence Date`),
                `Current Admission Date` = clean_date_col(`Current Admission Date`)
   ))
 
@@ -174,9 +173,9 @@ C_paroled <- parole_all %>%
   filter(`Sentence Date` >= as.Date("1900-01-01"),
          `Sentence Date` <= as.Date("1978-01-31"))
 
-C_paroled %>% count(Year, `Crime Class`)     %>% pivot_wider(names_from = Year, values_from = n)
-C_paroled %>% count(Year, Race)              %>% pivot_wider(names_from = Year, values_from = n)
-C_paroled %>% count(Year, Age_dataset_year)  %>% pivot_wider(names_from = Year, values_from = n)
+C_paroled %>% count(Year, `Crime Class`) %>% pivot_wider(names_from = Year, values_from = n)
+C_paroled %>% count(Year, Race) %>% pivot_wider(names_from = Year, values_from = n)
+C_paroled %>% count(Year, Age_dataset_year) %>% pivot_wider(names_from = Year, values_from = n)
 
 C_paroled %>%
   mutate(Age_group = cut(Age_dataset_year, c(0, 49, 59, 69, 79, Inf),
@@ -206,21 +205,21 @@ C_paroled %>% count(Age_group)
 yearly_table_parole <- C_paroled %>%
   group_by(Year) %>%
   summarise(
-    `25–39_Paroled`        = sum(Age_group == "25–39",       na.rm = TRUE),
-    `40–54_Paroled`        = sum(Age_group == "40–54",       na.rm = TRUE),
-    `55–64_Paroled`        = sum(Age_group == "55–64",       na.rm = TRUE),
-    `65_or_older_Paroled`  = sum(Age_group == "65_or_older", na.rm = TRUE),
+    `25–39_Paroled` = sum(Age_group == "25–39", na.rm = TRUE),
+    `40–54_Paroled` = sum(Age_group == "40–54", na.rm = TRUE),
+    `55–64_Paroled` = sum(Age_group == "55–64", na.rm = TRUE),
+    `65_or_older_Paroled` = sum(Age_group == "65_or_older", na.rm = TRUE),
     
-    Black_Paroled          = sum(str_detect(Race_clean, "BLACK"),    na.rm = TRUE),
-    Hispanic_Paroled       = sum(str_detect(Race_clean, "HISPANIC"), na.rm = TRUE),
-    White_Paroled          = sum(str_detect(Race_clean, "WHITE"),    na.rm = TRUE),
+    Black_Paroled = sum(str_detect(Race_clean, "BLACK"), na.rm = TRUE),
+    Hispanic_Paroled = sum(str_detect(Race_clean, "HISPANIC"), na.rm = TRUE),
+    White_Paroled = sum(str_detect(Race_clean, "WHITE"), na.rm = TRUE),
     
-    Class_1_Paroled        = sum(Class_clean %in% c("CLASS 1", "1"), na.rm = TRUE),
-    Class_2_Paroled        = sum(Class_clean %in% c("CLASS 2", "2"), na.rm = TRUE),
-    Class_3_Paroled        = sum(Class_clean %in% c("CLASS 3", "3"), na.rm = TRUE),
-    Class_4_Paroled        = sum(Class_clean %in% c("CLASS 4", "4"), na.rm = TRUE),
-    Class_X_Paroled        = sum(Class_clean %in% c("CLASS X", "X"), na.rm = TRUE),
-    Murder_Paroled         = sum(str_detect(Class_clean, "MURDER") | Class_clean %in% c("M", "CLASS M"),
+    Class_1_Paroled = sum(Class_clean %in% c("CLASS 1", "1"), na.rm = TRUE),
+    Class_2_Paroled = sum(Class_clean %in% c("CLASS 2", "2"), na.rm = TRUE),
+    Class_3_Paroled = sum(Class_clean %in% c("CLASS 3", "3"), na.rm = TRUE),
+    Class_4_Paroled = sum(Class_clean %in% c("CLASS 4", "4"), na.rm = TRUE),
+    Class_X_Paroled = sum(Class_clean %in% c("CLASS X", "X"), na.rm = TRUE),
+    Murder_Paroled = sum(str_detect(Class_clean, "MURDER") | Class_clean %in% c("M", "CLASS M"),
                                  na.rm = TRUE),
     .groups = "drop"
   ) %>%
@@ -229,10 +228,40 @@ yearly_table_parole <- C_paroled %>%
 clipr::write_clip(yearly_table_parole)
 
 ################################################################################
+# Projection
+################################################################################
+IDOC_2025 <- IDOC_all[IDOC_all$Year == 2025, ]
+summary(IDOC_2025$Age_dataset_year)
+IDOC_2025 <- IDOC_2025[1:30037,]
+
+IDOC_projection <- list()
+
+for(x in 2026:2036) {
+  IDOC_projection[[x - 2025]] <- IDOC_2025
+  IDOC_projection[[x - 2025]]$Year <- x
+  IDOC_projection[[x - 2025]]$Age_dataset_year <-
+    IDOC_projection[[x - 2025]]$Age_dataset_year + (x - 2025)
+  IDOC_projection[[x - 2025]]$years_served <-
+    IDOC_projection[[x - 2025]]$years_served + (x - 2025)
+}
+
+names(IDOC_projection) <- 2026:2036
+
+IDOC_projection_eligible <- lapply(IDOC_projection, function(x) {
+  if (x$Year[1] == 2026) {
+    return(x[x$years_served >= 35, , drop = FALSE])
+  } else if (x$Year[1] == 2027) {
+    return(x[x$years_served >= 25, , drop = FALSE])
+  } else {
+    return(x[x$years_served >= 20, , drop = FALSE])
+  }
+})
+
+names(IDOC_projection_eligible) <- names(IDOC_projection)
+################################################################################
 # Collect IPRB C-Numbers Statistics
 ################################################################################
-
-Parole_Annualized <- read.csv("C:/Users/Paolo/Desktop/PI Report/Parole_Annualized.csv")
+Parole_Annualized <- read.csv("Parole_Annualized.csv")
 Parole_Annualized <- Parole_Annualized %>% left_join(yearly_table_IDOC, by = "Year")
 
 Parole_Annualized <- 
