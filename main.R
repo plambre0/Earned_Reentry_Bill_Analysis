@@ -25,6 +25,7 @@ p_race_age_vogel <- as.data.frame(p_race_age_vogel)
 p_race_age_vogel[, 2:4] <- sapply(p_race_age_vogel[,2:4], as.numeric)
 names(p_race_age_vogel) <- c("Age range", "White", "Black", "Hispanic")
 
+bjs_employment_midwest <- read.csv("bjs_employment_midwest.csv")
 ################################################################################
 # Declare Parameters
 ################################################################################
@@ -48,4 +49,29 @@ source("load_IDOC.r")
 ################################################################################
 # Analyses
 ################################################################################
+table(IDOC_projection_eligible$`2026`$Race)
+table(IDOC_projection_eligible$`2026`$`Offense Type`)
+table(IDOC_projection_eligible$`2026`$`Crime Class`)
 
+table(IDOC_projection_eligible$`2026`$Age_group, IDOC_projection_eligible$`2026`$Served_group)
+table(IDOC_projection_eligible$`2026`$Age_group, IDOC_projection_eligible$`2026`$Race)
+table(IDOC_projection_eligible$`2026`$Race, IDOC_projection_eligible$`2026`$`Crime Class`)
+
+summary(IDOC_projection_eligible$`2026`$years_served)
+summary(IDOC_projection_eligible$`2026`$Age_dataset_year)
+
+table(IDOC_projection_eligible$`2036`$Race)
+table(IDOC_projection_eligible$`2036`$`Offense Type`)
+table(IDOC_projection_eligible$`2036`$`Crime Class`)
+
+table(IDOC_projection_eligible$`2036`$Age_group, IDOC_projection_eligible$`2036`$Served_group)
+table(IDOC_projection_eligible$`2036`$Age_group, IDOC_projection_eligible$`2036`$Race)
+table(IDOC_projection_eligible$`2036`$Race, IDOC_projection_eligible$`2036`$`Crime Class`)
+
+summary(IDOC_projection_eligible$`2036`$years_served)
+summary(IDOC_projection_eligible$`2036`$Age_dataset_year)
+
+################################################################################
+# Simulation
+################################################################################
+source("simulate_ipf.r")
